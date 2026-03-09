@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Sách</title>
+
+    <!-- Bootstrap CSS (local) -->
+    <link rel="stylesheet" href="/static/bootstrap-5.3.8-dist/bootstrap/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Georgia', serif;
+        }
+
+        .navbar {
+            background-color: #1a1a2e;
+            border-bottom: 3px solid #e94560;
+        }
+
+        .navbar-brand {
+            color: #ffffff !important;
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            color: #cccccc !important;
+            font-size: 1rem;
+            margin: 0 8px;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: #e94560 !important;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+
+        .hero p {
+            color: #aaaaaa;
+            font-size: 1.1rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .card-title {
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .badge-price {
+            background-color: #e94560;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .btn-edit {
+            background-color: #f0a500;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 14px;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn-edit:hover { background-color: #d4910a; color: white; }
+
+        .btn-delete {
+            background-color: #e94560;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 14px;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn-delete:hover { background-color: #c0392b; color: white; }
+
+        #loadingMsg {
+            text-align: center;
+            color: #888;
+            font-size: 1.1rem;
+            padding: 40px 0;
+        }
+
+        footer {
+            background-color: #1a1a2e;
+            color: #aaaaaa;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="#">📚 JavaBook</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="Index.html">Trang chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="Add.html">Thêm mới</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="hero">
+    <div class="container">
+        <h1>Danh Sách Sách</h1>
+        <p>Quản lý toàn bộ đầu sách của bạn tại đây</p>
+        <a href="Add.html" class="btn btn-danger mt-2">+ Thêm sách mới</a>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container mt-5">
+    <div id="loadingMsg">Đang tải danh sách sách...</div>
+    <div class="row g-4" id="bookList"></div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <p>© 2026 JavaBook — Hệ thống quản lý sách</p>
+</footer>
+
+<!-- Bootstrap JS (local) -->
+<script src="/static/bootstrap-5.3.8-dist/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const API_URL = "http://localhost:8080/api/v1/books";
+
+    // ===== Lấy danh sách sách từ API =====
+    async function loadBooks() {
+        try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error("Không thể kết nối API");
+
+            const books = await response.json();
+            renderBooks(books);
+        } catch (error) {
+            document.getElementById("loadingMsg").innerHTML =
+                `<span class="text-danger">⚠️ Lỗi: ${error.message}</span>`;
+        }
+    }
+
+    // ===== Hiển thị danh sách sách =====
+    function renderBooks(books) {
+        const bookList = document.getElementById("bookList");
+        const loadingMsg = document.getElementById("loadingMsg");
+        loadingMsg.style.display = "none";
+
+        if (books.length === 0) {
+            bookList.innerHTML = `<p class="text-muted text-center">Chưa có sách nào trong hệ thống.</p>`;
+            return;
+        }
+
+        bookList.innerHTML = books.map(book => `
+            <div class="col-md-4" id="book-${book.id}">
+                <div class="card p-3">
+                    <div class="card-body">
+                        <h5 class="card-title">${book.name}</h5>
+                        <p class="card-text text-muted">Mô tả: ${book.description ?? "N/A"}</p>
+                        <span class="badge-price">${book.price.toLocaleString("vi-VN")} đ</span>
+                        <div class="mt-3 d-flex gap-2">
+                            <button class="btn-edit" onclick="editBook(${book.id})">✏️ Sửa</button>
+                            <button class="btn-delete" onclick="deleteBook(${book.id}, '${book.name}')">🗑️ Xóa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // ===== Xóa sách =====
+    async function deleteBook(id, name) {
+        if (!confirm(`Bạn có chắc muốn xóa "${name}" không?`)) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            if (!response.ok) throw new Error("Xóa thất bại");
+
+            // Xóa card khỏi giao diện luôn mà không cần reload
+            document.getElementById(`book-${id}`).remove();
+            alert(`Đã xóa "${name}" thành công!`);
+        } catch (error) {
+            alert("Lỗi khi xóa: " + error.message);
+        }
+    }
+
+    // ===== Chuyển sang trang sửa =====
+    function editBook(id) {
+        window.location.href = `edit.html?id=${id}`;
+    }
+
+    // Gọi khi trang load xong
+    loadBooks();
+</script>
+</body>
+</html>
