@@ -1,21 +1,37 @@
 package NguyenLeTrongPhuc.JavaBook.Controller;
 
 import NguyenLeTrongPhuc.JavaBook.Model.Book;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import NguyenLeTrongPhuc.JavaBook.Repositories.BookRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/api/v1/books")
 //http://localhost:8080/api/v1/books
 public class BookController {
+    @Autowired
+    private BookRepository repository;
     @GetMapping("")
     List<Book> getAllProducts(){
-        return List.of(
-                new Book(1L, "Book1", 19000.0, "new"),
-                new Book(2L, "Book2", 39000.0, "new")
-        );
+        return repository.findAll();
     }
+    @GetMapping("/{id}")
+    Book findByID(@PathVariable Long id){
+        return repository.findById(id)
+                .orElseThrow(()->new RuntimeException("Khong tim thay san pham voi id : "+id));
+    }
+    @PostMapping("/insert")
+    Book insertBook(@RequestBody Book newBook){
+        List<Book> foundBook = repository.findBookByName(newBook.getName().trim());
+        if(!foundBook.isEmpty()){
+            throw new RuntimeException("Sach '" + newBook.getName() + "'da ton tai trong database!");
+        }
+        return repository.save(newBook);
+    }
+
+
+
 }
